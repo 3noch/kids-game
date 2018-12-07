@@ -24,6 +24,12 @@
 <body>
   <canvas id="renderCanvas"></canvas>
   <script>
+    function replicate(n, x) {
+      var arr = [];
+      for (i = 0; i < n; n++) {
+        arr[i] = x;
+      }
+    }
     window.addEventListener('DOMContentLoaded', function(){
       // get the canvas DOM element
       var canvas = document.getElementById('renderCanvas');
@@ -31,13 +37,20 @@
       // load the 3D engine
       var engine = new BABYLON.Engine(canvas, true);
 
+      var scene = new BABYLON.Scene(engine);
+
+      function boxAt(x, y, z) {
+        var box = BABYLON.MeshBuilder.CreateBox("box" + i + "" + j + "" + z, {height: 1, width: 1, depth: 1}, scene);
+        box.position.x = x;
+        box.position.y = y;
+        box.position.z = z;
+        return box;
+      }
+
       // createScene function that creates and return the scene
       var createScene = function(){
-        // create a basic BJS Scene object
-        var scene = new BABYLON.Scene(engine);
-
-        // create a FreeCamera, and set its position to (x:0, y:5, z:-10)
-        var camera = new BABYLON.FreeCamera('camera1', new BABYLON.Vector3(0, 5,-10), scene);
+        // create a FreeCamera, and set its position to (x:0, y:5, z:10)
+        var camera = new BABYLON.FreeCamera('camera1', new BABYLON.Vector3(0, 5, 10), scene);
 
         // target the camera to scene origin
         camera.setTarget(BABYLON.Vector3.Zero());
@@ -46,27 +59,36 @@
         camera.attachControl(canvas, false);
 
         // create a basic light, aiming 0,1,0 - meaning, to the sky
-        var light = new BABYLON.HemisphericLight('light1', new BABYLON.Vector3(0,1,0), scene);
+        var light = new BABYLON.HemisphericLight('light1', new BABYLON.Vector3(0,0,5), scene);
 
-        // create a built-in "sphere" shape; its constructor takes 6 params: name, segment, diameter, scene, updatable, sideOrientation
-        var sphere = BABYLON.Mesh.CreateSphere('sphere1', 16, 2, scene);
-
-        // move the sphere upward 1/2 of its height
-        sphere.position.y = 1;
-
-        // create a built-in "ground" shape;
-        var ground = BABYLON.Mesh.CreateGround('ground1', 6, 6, 2, scene);
+        boxes = [];
+        for (i = 0; i < 10; i++) {
+          boxes[i] = []
+          for (j = 0; j < 10; j++) {
+            boxes[i][j] = boxAt(i, j, 0)
+          }
+        }
 
         // return the created scene
-        return scene;
+        return {scene: scene, boxes: boxes};
       }
 
-      // call the createScene function
-      var scene = createScene();
-
       // run the render loop
+      t = 0;
+      up = true;
+      var res = createScene(t);
+
       engine.runRenderLoop(function(){
-        scene.render();
+        t += 0.01 * (up ? 1 : -1);
+        if (up && t > 2) {
+          up = false;
+        } else if (!up && t < 0) {
+          t = 0;
+          up = true;
+        }
+
+        res.boxes[0][0].position.z = t;
+        res.scene.render();
       });
 
       // the canvas/window resize event handler
