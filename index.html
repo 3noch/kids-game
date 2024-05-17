@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html" charset="utf-8"/>
+  <title>Babylon - Getting Started</title>
+  <!--- Link to the last version of BabylonJS --->
+  <script src="https://cdn.babylonjs.com/babylon.js"></script>
+  <style>
+    html, body {
+      overflow: hidden;
+      width   : 100%;
+      height  : 100%;
+      margin  : 0;
+      padding : 0;
+    }
+
+    #renderCanvas {
+      width   : 100%;
+      height  : 100%;
+      touch-action: none;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="renderCanvas"></canvas>
+  <script>
+    function replicate(n, x) {
+      var arr = [];
+      for (i = 0; i < n; i++) {
+        arr[i] = x;
+      }
+    }
+    window.addEventListener('DOMContentLoaded', function(){
+      // get the canvas DOM element
+      var canvas = document.getElementById('renderCanvas');
+
+      // load the 3D engine
+      var engine = new BABYLON.Engine(canvas, true);
+
+      var scene = new BABYLON.Scene(engine);
+
+      function boxAt(x, y, z) {
+        var box = BABYLON.MeshBuilder.CreateBox("box" + i + "" + j + "" + z, {height: 1, width: 1, depth: 1}, scene);
+        box.position.x = x;
+        box.position.y = y;
+        box.position.z = z;
+        return box;
+      }
+
+      // createScene function that creates and return the scene
+      var createScene = function(){
+        // create a FreeCamera, and set its position to (x:0, y:5, z:10)
+        var camera = new BABYLON.FreeCamera('camera1', new BABYLON.Vector3(0, 5, 10), scene);
+
+        // target the camera to scene origin
+        camera.setTarget(BABYLON.Vector3.Zero());
+
+        // attach the camera to the canvas
+        camera.attachControl(canvas, false);
+
+        // create a basic light, aiming 0,1,0 - meaning, to the sky
+        var light = new BABYLON.HemisphericLight('light1', new BABYLON.Vector3(0,0,5), scene);
+
+        boxes = [];
+        for (i = 0; i < 10; i++) {
+          boxes[i] = []
+          for (j = 0; j < 10; j++) {
+            boxes[i][j] = boxAt(i, j, 0)
+          }
+        }
+
+        // return the created scene
+        return {scene: scene, boxes: boxes};
+      }
+
+      // run the render loop
+      t = 0;
+      up = true;
+      var res = createScene(t);
+
+      engine.runRenderLoop(function(){
+        t += 0.01 * (up ? 1 : -1);
+        if (up && t > 2) {
+          up = false;
+        } else if (!up && t < 0) {
+          t = 0;
+          up = true;
+        }
+
+        res.boxes[0][0].position.z = t;
+        res.scene.render();
+      });
+
+      // the canvas/window resize event handler
+      window.addEventListener('resize', function(){
+        engine.resize();
+      });
+    });
+  </script>
+</body>
+</html>
